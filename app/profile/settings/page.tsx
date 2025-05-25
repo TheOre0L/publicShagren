@@ -1,192 +1,205 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Bell, Eye, EyeOff, Home, Package, Save, Settings, ShoppingBag, User } from "lucide-react"
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Save,
+  Settings,
+  User,
+  Package,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Switch } from "@/components/ui/switch"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import $api, { API_URL } from "@/http/requests"
+import Loader from "@/components/loader"
+import { useAuth } from "@/http/isAuth"
+import Header from "@/components/header"
 
-// Моковые данные пользователя
-const USER = {
-  id: 1,
-  firstName: "Иван",
-  lastName: "Петров",
-  email: "ivan@example.com",
-  phone: "+7 (999) 123-45-67",
-  avatar: "/placeholder-user.jpg",
-  registrationDate: "15.01.2023",
-  notifications: {
-    orderUpdates: true,
-    promotions: true,
-    newsletter: false,
-    reviews: true,
-  },
+// Заглушка начальных данных уведомлений — подмени на реальные данные из API
+const DEFAULT_NOTIFICATIONS = {
+  orderUpdates: true,
+  promotions: true,
+  newsletter: false,
+  reviews: true,
 }
 
 export default function ProfileSettingsPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("profile")
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
+  const { isAuth, isLoading } = useAuth()
 
-  // Состояния для форм
+  // Данные профиля
   const [profileData, setProfileData] = useState({
-    firstName: USER.firstName,
-    lastName: USER.lastName,
-    email: USER.email,
-    phone: USER.phone,
+    fio: "",
+    email: "",
+    telephone: "",
   })
+  const [isLoadingProfile, setLoadingProfile] = useState(true)
 
+  // Пароли
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   })
 
-  const [notificationSettings, setNotificationSettings] = useState(USER.notifications)
+  // Видимость паролей
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // Обработчики изменения форм
+  // Уведомления
+  const [notificationSettings, setNotificationSettings] = useState(DEFAULT_NOTIFICATIONS)
+
+  // Активная вкладка
+  const [activeTab, setActiveTab] = useState("profile")
+
+  // Сообщения об успехе
+  const [successMessage, setSuccessMessage] = useState("")
+
+  // Редирект если не авторизован
+  useEffect(() => {
+    if (isLoading) return
+    if (!isAuth) router.push("/login")
+  }, [isAuth, isLoading, router])
+
+  // Загрузка данных профиля после авторизации
+  useEffect(() => {
+    if (isLoading || !isAuth) return
+    setLoadingProfile(true)
+    $api
+      .get(`${API_URL}/profile`)
+      .then((res) => {
+        setProfileData({
+          fio: res.data.fio || "",
+          email: res.data.email || "",
+          telephone: res.data.telephone || "",
+        })
+        setNotificationSettings(res.data.notifications || DEFAULT_NOTIFICATIONS)
+      })
+      .catch((e) => {
+        alert("Ошибка при загрузке данных профиля")
+        console.error(e)
+      })
+      .finally(() => setLoadingProfile(false))
+  }, [isAuth, isLoading])
+
+  if (isLoading || isLoadingProfile) return <Loader />
+
+  // Хендлеры изменения данных
   const handleProfileChange = (e) => {
     const { name, value } = e.target
-    setProfileData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setProfileData((prev) => ({ ...prev, [name]: value }))
   }
-
   const handlePasswordChange = (e) => {
     const { name, value } = e.target
-    setPasswordData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setPasswordData((prev) => ({ ...prev, [name]: value }))
   }
-
   const handleNotificationChange = (key, value) => {
-    setNotificationSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }))
+    setNotificationSettings((prev) => ({ ...prev, [key]: value }))
   }
 
-  // Обработчики отправки форм
-  const handleProfileSubmit = (e) => {
+  // Отправка данных профиля
+  const handleProfileSubmit = async (e) => {
     e.preventDefault()
-    // Здесь будет логика сохранения профиля
-    setSuccessMessage("Профиль успешно обновлен")
-    setTimeout(() => setSuccessMessage(""), 3000)
+    try {
+      await $api.patch(`${API_URL}/settings`, profileData)
+      setSuccessMessage("Профиль успешно обновлен")
+      setTimeout(() => setSuccessMessage(""), 3000)
+    } catch {
+      alert("Ошибка при обновлении профиля")
+    }
   }
 
-  const handlePasswordSubmit = (e) => {
+  // Отправка смены пароля
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    // Здесь будет логика изменения пароля
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       alert("Пароли не совпадают")
       return
     }
-    setSuccessMessage("Пароль успешно изменен")
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    })
-    setTimeout(() => setSuccessMessage(""), 3000)
+
+    if (!/(?=.*[a-zA-Z])(?=.*\d).{6,}/.test(passwordData.newPassword)) {
+      alert("Пароль должен содержать минимум 6 символов, включая буквы и цифры")
+      return
+    }
+
+    try {
+      await $api.post(`${API_URL}/pass`, {
+        pas: passwordData.currentPassword,
+        newpas: passwordData.newPassword,
+      })
+      setSuccessMessage("Пароль успешно изменен!")
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
+      setTimeout(() => setSuccessMessage(""), 3000)
+    } catch {
+      alert("Ошибка при изменении пароля")
+    }
   }
 
+  // Отправка настроек уведомлений
   const handleNotificationSubmit = (e) => {
     e.preventDefault()
-    // Здесь будет логика сохранения настроек уведомлений
+    // TODO: сделать вызов API для сохранения notificationSettings, если есть эндпоинт
     setSuccessMessage("Настройки уведомлений сохранены")
     setTimeout(() => setSuccessMessage(""), 3000)
   }
 
+  // Функция для инициалов в аватаре
+  const getInitials = (fio) => {
+    if (!fio) return "?"
+    return fio
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <ShoppingBag className="h-6 w-6" />
-              <span className="text-xl">КожаМастер</span>
-            </Link>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
-              Главная
-            </Link>
-            <Link href="/catalog" className="text-sm font-medium hover:underline underline-offset-4">
-              Каталог
-            </Link>
-            <Link href="#about" className="text-sm font-medium hover:underline underline-offset-4">
-              О нас
-            </Link>
-            <Link href="#reviews" className="text-sm font-medium hover:underline underline-offset-4">
-              Отзывы
-            </Link>
-            <Link href="#contacts" className="text-sm font-medium hover:underline underline-offset-4">
-              Контакты
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/cart">
-              <Button variant="outline" size="icon" className="rounded-full relative">
-                <ShoppingBag className="h-4 w-4" />
-                <span className="sr-only">Корзина</span>
-                <span className="absolute -top-1 -right-1 bg-amber-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  3
-                </span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header isAuth={isAuth} />
 
       <main className="flex-1 container py-8">
         <div className="flex flex-col space-y-8">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="gap-1 p-0 h-auto" asChild>
-              <Link href="/profile">
+            <Link href="/profile" passHref legacyBehavior>
+              <Button variant="ghost" size="sm" className="gap-1 p-0 h-auto" as="a">
                 <ArrowLeft className="h-4 w-4" />
                 Назад в профиль
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
 
           <div className="flex flex-col md:flex-row gap-8">
             {/* Боковая панель */}
-            <div className="w-full md:w-64 space-y-6">
+            <aside className="w-full md:w-64 space-y-6">
               <div className="flex flex-col items-center text-center p-6 border rounded-lg">
                 <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src={USER.avatar} alt={`${USER.firstName} ${USER.lastName}`} />
-                  <AvatarFallback>
-                    {USER.firstName.charAt(0)}
-                    {USER.lastName.charAt(0)}
-                  </AvatarFallback>
+                  <AvatarFallback>{getInitials(profileData.fio)}</AvatarFallback>
                 </Avatar>
-                <h2 className="text-xl font-bold">
-                  {USER.firstName} {USER.lastName}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-4">{USER.email}</p>
-                <Button variant="outline" size="sm" className="w-full">
-                  Изменить фото
-                </Button>
-              </div>
-
-              <div className="border rounded-lg overflow-hidden">
-                <div className="bg-muted/50 px-4 py-2 font-medium">Настройки</div>
-                <div className="p-2">
+                <h2 className="text-xl font-bold">{profileData.fio}</h2>
+                <p className="text-sm text-muted-foreground mb-4">{profileData.email}</p>
+                <div className="p-2 flex flex-col space-y-1">
                   <button
+                    type="button"
                     className={`w-full flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors ${
                       activeTab === "profile" ? "bg-amber-50 text-amber-700" : "hover:bg-muted"
                     }`}
@@ -196,6 +209,7 @@ export default function ProfileSettingsPage() {
                     Личные данные
                   </button>
                   <button
+                    type="button"
                     className={`w-full flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors ${
                       activeTab === "password" ? "bg-amber-50 text-amber-700" : "hover:bg-muted"
                     }`}
@@ -205,27 +219,28 @@ export default function ProfileSettingsPage() {
                     Изменить пароль
                   </button>
                   <button
+                    type="button"
                     className={`w-full flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors ${
                       activeTab === "notifications" ? "bg-amber-50 text-amber-700" : "hover:bg-muted"
                     }`}
                     onClick={() => setActiveTab("notifications")}
                   >
-                    <Bell className="h-4 w-4" />
+                    <BellIcon className="h-4 w-4" />
                     Уведомления
                   </button>
                   <Link
                     href="/profile"
-                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors hover:bg-muted`}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors hover:bg-muted"
                   >
                     <Package className="h-4 w-4" />
                     Мои заказы
                   </Link>
                 </div>
               </div>
-            </div>
+            </aside>
 
             {/* Основной контент */}
-            <div className="flex-1">
+            <section className="flex-1">
               <h1 className="text-2xl font-bold mb-6">Настройки профиля</h1>
 
               {successMessage && (
@@ -242,6 +257,7 @@ export default function ProfileSettingsPage() {
                   <TabsTrigger value="notifications">Уведомления</TabsTrigger>
                 </TabsList>
 
+                {/* Личные данные */}
                 <TabsContent value="profile">
                   <Card>
                     <CardHeader>
@@ -250,27 +266,15 @@ export default function ProfileSettingsPage() {
                     </CardHeader>
                     <CardContent>
                       <form id="profile-form" onSubmit={handleProfileSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="firstName">Имя</Label>
-                            <Input
-                              id="firstName"
-                              name="firstName"
-                              value={profileData.firstName}
-                              onChange={handleProfileChange}
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lastName">Фамилия</Label>
-                            <Input
-                              id="lastName"
-                              name="lastName"
-                              value={profileData.lastName}
-                              onChange={handleProfileChange}
-                              required
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="fio">ФИО</Label>
+                          <Input
+                            id="fio"
+                            name="fio"
+                            value={profileData.fio}
+                            onChange={handleProfileChange}
+                            required
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="email">Email</Label>
@@ -284,12 +288,12 @@ export default function ProfileSettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Телефон</Label>
+                          <Label htmlFor="telephone">Телефон</Label>
                           <Input
-                            id="phone"
-                            name="phone"
+                            id="telephone"
+                            name="telephone"
                             type="tel"
-                            value={profileData.phone}
+                            value={profileData.telephone}
                             onChange={handleProfileChange}
                             required
                           />
@@ -305,80 +309,43 @@ export default function ProfileSettingsPage() {
                   </Card>
                 </TabsContent>
 
+                {/* Изменение пароля */}
                 <TabsContent value="password">
                   <Card>
                     <CardHeader>
                       <CardTitle>Изменить пароль</CardTitle>
-                      <CardDescription>Обновите свой пароль для повышения безопасности</CardDescription>
+                      <CardDescription>Пароль должен содержать минимум 6 символов, включая буквы и цифры</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <form id="password-form" onSubmit={handlePasswordSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="currentPassword">Текущий пароль</Label>
-                          <div className="relative">
-                            <Input
-                              id="currentPassword"
-                              name="currentPassword"
-                              type={showCurrentPassword ? "text" : "password"}
-                              value={passwordData.currentPassword}
-                              onChange={handlePasswordChange}
-                              required
-                              className="pr-10"
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            >
-                              {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="newPassword">Новый пароль</Label>
-                          <div className="relative">
-                            <Input
-                              id="newPassword"
-                              name="newPassword"
-                              type={showNewPassword ? "text" : "password"}
-                              value={passwordData.newPassword}
-                              onChange={handlePasswordChange}
-                              required
-                              className="pr-10"
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                              onClick={() => setShowNewPassword(!showNewPassword)}
-                            >
-                              {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Пароль должен содержать минимум 8 символов, включая буквы и цифры
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">Подтвердите новый пароль</Label>
-                          <div className="relative">
-                            <Input
-                              id="confirmPassword"
-                              name="confirmPassword"
-                              type={showConfirmPassword ? "text" : "password"}
-                              value={passwordData.confirmPassword}
-                              onChange={handlePasswordChange}
-                              required
-                              className="pr-10"
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            >
-                              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                          </div>
-                        </div>
+                        <PasswordInput
+                          id="currentPassword"
+                          name="currentPassword"
+                          label="Текущий пароль"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          show={showCurrentPassword}
+                          setShow={setShowCurrentPassword}
+                        />
+                        <PasswordInput
+                          id="newPassword"
+                          name="newPassword"
+                          label="Новый пароль"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          show={showNewPassword}
+                          setShow={setShowNewPassword}
+                          description="Пароль должен содержать минимум 6 символов, включая буквы и цифры"
+                        />
+                        <PasswordInput
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          label="Подтвердите новый пароль"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          show={showConfirmPassword}
+                          setShow={setShowConfirmPassword}
+                        />
                       </form>
                     </CardContent>
                     <CardFooter>
@@ -400,89 +367,39 @@ export default function ProfileSettingsPage() {
                   </Card>
                 </TabsContent>
 
+                {/* Настройки уведомлений */}
                 <TabsContent value="notifications">
                   <Card>
                     <CardHeader>
                       <CardTitle>Настройки уведомлений</CardTitle>
-                      <CardDescription>Выберите, какие уведомления вы хотите получать</CardDescription>
+                      <CardDescription>Управляйте своими предпочтениями уведомлений</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <form id="notifications-form" onSubmit={handleNotificationSubmit} className="space-y-4">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label htmlFor="orderUpdates">Обновления заказов</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Получать уведомления о статусе ваших заказов
-                              </p>
-                            </div>
-                            <Switch
-                              id="orderUpdates"
-                              checked={notificationSettings.orderUpdates}
-                              onCheckedChange={(checked) => handleNotificationChange("orderUpdates", checked)}
-                            />
+                        {Object.entries(notificationSettings).map(([key, value]) => (
+                          <div key={key} className="flex items-center justify-between">
+                            <Label htmlFor={key} className="capitalize">
+                              {{
+                                orderUpdates: "Обновления заказов",
+                                promotions: "Промоакции",
+                                newsletter: "Рассылка новостей",
+                                reviews: "Отзывы",
+                              }[key] || key}
+                            </Label>
+                            <Switch id={key} checked={value} className="bg-amber-300 radix-state-checked:bg-amber-500" onCheckedChange={(checked) => handleNotificationChange(key, checked)} />
                           </div>
-
-                          <Separator />
-
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label htmlFor="promotions">Акции и скидки</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Получать информацию о специальных предложениях и скидках
-                              </p>
-                            </div>
-                            <Switch
-                              id="promotions"
-                              checked={notificationSettings.promotions}
-                              onCheckedChange={(checked) => handleNotificationChange("promotions", checked)}
-                            />
-                          </div>
-
-                          <Separator />
-
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label htmlFor="newsletter">Новостная рассылка</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Получать ежемесячную рассылку с новостями и советами
-                              </p>
-                            </div>
-                            <Switch
-                              id="newsletter"
-                              checked={notificationSettings.newsletter}
-                              onCheckedChange={(checked) => handleNotificationChange("newsletter", checked)}
-                            />
-                          </div>
-
-                          <Separator />
-
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label htmlFor="reviews">Отзывы и обзоры</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Получать запросы на оставление отзывов о приобретенных товарах
-                              </p>
-                            </div>
-                            <Switch
-                              id="reviews"
-                              checked={notificationSettings.reviews}
-                              onCheckedChange={(checked) => handleNotificationChange("reviews", checked)}
-                            />
-                          </div>
-                        </div>
+                        ))}
                       </form>
                     </CardContent>
                     <CardFooter>
                       <Button type="submit" form="notifications-form" className="bg-amber-700 hover:bg-amber-800">
-                        <Save className="mr-2 h-4 w-4" />
                         Сохранить настройки
                       </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
               </Tabs>
-            </div>
+            </section>
           </div>
         </div>
       </main>
@@ -490,3 +407,48 @@ export default function ProfileSettingsPage() {
   )
 }
 
+// Вспомогательный компонент для поля пароля с кнопкой показать/скрыть
+function PasswordInput({ id, name, label, value, onChange, show, setShow, description }) {
+  return (
+    <div className="space-y-2 relative">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        name={name}
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        required
+        className="pr-10"
+        aria-label={label}
+      />
+      <button
+        type="button"
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+        onClick={() => setShow(!show)}
+        aria-label={show ? "Скрыть пароль" : "Показать пароль"}
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+    </div>
+  )
+}
+
+// Иконка колокольчика для уведомлений, если lucide-react не подключён
+function BellIcon(props) {
+  return (
+    <svg
+      {...props}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      viewBox="0 0 24 24"
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+  )
+}

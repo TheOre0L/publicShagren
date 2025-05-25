@@ -17,11 +17,26 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  distDir: 'build',
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.watchOptions = {
+        ignored: [
+          '**/.next/**',
+          '**/node_modules/**',
+          '**/logs/**',
+          '**/*.log',
+          '**/tmp/**',
+          '**/dist/**',
+          '**/coverage/**',
+        ],
+      };
+    }
+    return config;
   },
 }
 

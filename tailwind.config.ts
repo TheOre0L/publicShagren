@@ -11,6 +11,7 @@ const config = {
   ],
   prefix: "",
   theme: {
+    
     container: {
       center: true,
       padding: "2rem",
@@ -19,6 +20,9 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        montserrat: ['"Montserrat"', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

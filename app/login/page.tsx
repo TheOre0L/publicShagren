@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, ShoppingBag } from "lucide-react"
-
+import {message} from "antd"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,14 +15,15 @@ import Header from "@/components/header"
 
 export default function LoginPage() {
   const router = useRouter()
+    const [messageApi, contextHolder] = message.useMessage();
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
-    login: "",
+    email: "",
     password: "",
     remember: false,
   })
   const [errors, setErrors] = useState({
-    login: "",
+    email: "",
     password: "",
   })
 
@@ -48,8 +49,8 @@ export default function LoginPage() {
     let isValid = true
     const newErrors = { ...errors }
 
-    if (!formData.login.trim()) {
-      newErrors.login = "Введите логин"
+    if (!formData.email.trim()) {
+      newErrors.email = "Введите email"
       isValid = false
     }
 
@@ -69,9 +70,12 @@ export default function LoginPage() {
       // Здесь будет логика отправки данных на сервер
       console.log("Форма входа отправлена:", formData)
 
-      $api.post(`${API_URL}/login`, {email: formData.login, password: formData.password}).then((res) => {
+      $api.post(`${API_URL}/login`, {email: formData.email, password: formData.password}).then((res) => {
         localStorage.setItem('token', res.data.accessToken)
         router.push('/')
+      }).catch((e) => {
+        console.log(e)
+        messageApi.error(`${e.response.data.message}`)
       })
     }
   }
@@ -79,7 +83,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header isAuthPage isAuth={false}/>
-
+      {contextHolder}
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md">
           <Card className="border-amber-800/20">
@@ -92,8 +96,8 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <Label htmlFor="login">E-mail</Label>
                   <Input
-                    id="login"
-                    name="login"
+                    id="email"
+                    name="email"
                     type="email"
                     placeholder="Введите email"
                     value={formData.login}
@@ -130,22 +134,6 @@ export default function LoginPage() {
                   </div>
                   {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="remember"
-                    name="remember"
-                    checked={formData.remember}
-                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, remember: checked === true }))}
-                  />
-                  <label
-                    htmlFor="remember"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Запомнить меня
-                  </label>
-                </div>
-
                 <Button type="submit" className="w-full bg-amber-700 hover:bg-amber-800">
                   Войти
                 </Button>
@@ -154,7 +142,7 @@ export default function LoginPage() {
             <CardFooter className="flex justify-center">
               <div className="text-center text-sm">
                 Нет аккаунта?{" "}
-                <Link href="/register" className="text-amber-700 hover:underline">
+                <Link href="/registration" className="text-amber-700 hover:underline">
                   Зарегистрироваться
                 </Link>
               </div>

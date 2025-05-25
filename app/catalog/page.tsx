@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/pagination"
 import Header from "@/components/header"
 import $api, { API_URL } from "@/http/requests"
+import { useAuth } from "@/http/isAuth"
 import { title } from "process"
 
 
@@ -41,7 +42,7 @@ export default function CatalogPage() {
     const [CATEGORIES, setCATEGORIES] = useState<any[]>([]);
     const [totalPages, setTotalPages] = useState(1);
     const [COLORS, setCOLORS] = useState<any[]>([]);
-    
+    const {isAuth} = useAuth();
 
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -174,7 +175,7 @@ export default function CatalogPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header isAuth/>
+      <Header isAuth={isAuth}/>
 
       <main className="flex-1 container py-8">
         <div className="flex flex-col space-y-6">

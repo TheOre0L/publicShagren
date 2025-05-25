@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import $api, { API_URL } from "./requests";
+import router from "next/router";
 
 export const useAuth = () => {
   const [isAuth, setIsAuth] = useState<boolean>(false);
+  const [isAccept, setIsAccept] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const isAuthChecked = useRef(false); // Добавляем реф для проверки, был ли уже выполнен запрос
 
@@ -18,7 +20,8 @@ export const useAuth = () => {
           withCredentials: true,
         });
         localStorage.setItem("token", res.data.accessToken);
-        setIsAuth(true);
+        setIsAccept(res.data.accept)
+        setIsAuth(true);  
       } catch {
         // Ошибка игнорируется, isAuth остается false
       } finally {
@@ -28,15 +31,16 @@ export const useAuth = () => {
 
     checkAuth();
   }, []);
-  return { isAuth, isLoading };
+  return { isAuth, isLoading, isAccept };
 };
 
 export const logout = async () => {
   try {
     await $api.get(`${API_URL}/logout`, { withCredentials: true });
+    localStorage.removeItem("token");
   } catch {
     // Ошибку игнорируем
   } finally {
-    localStorage.removeItem("token");
+    router.push("/")
   }
 };

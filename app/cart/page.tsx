@@ -38,6 +38,8 @@ import CdekWidget from "@/components/cdekWidget"
 import Script from "next/script"
 import { useAuth } from "@/http/isAuth"
 import Head from "next/head"
+import Loader from "@/components/loader";
+import { message } from "antd";
 
 export default function CartPage() {
   const router = useRouter()
@@ -45,9 +47,13 @@ export default function CartPage() {
     mask: '+7 (___) ___-__-__',
     replacement: { _: /\d/ },
   });
+  const {messageApi, contextHolder} = message.useMessage();
   // Состояния для корзины
+  const {isAuth} = useAuth();
   const [cartItems, setCartItems] = useState([])
   const [promoCode, setPromoCode] = useState("")
+  const [subtotal, setSubtotal] = useState(0)
+  const [discount, setDiscount] = useState(0)
   const [promoDiscount, setPromoDiscount] = useState(0)
   const [promoError, setPromoError] = useState("")
   const [activeTab, setActiveTab] = useState("cart")
@@ -55,6 +61,7 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [selectedPoint, setSelectedPoint] = useState({delivery: null, rate: {delivery_sum: 0}, address: null })
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [isLoader, setIsLoaded] = useState(true)
 
   // Состояния для формы
   const [formData, setFormData] = useState({
@@ -69,37 +76,99 @@ export default function CartPage() {
     comment: "",
   })
 
-  // Расчет итогов
-  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-  const discount = cartItems.reduce((sum, item) => {
-    if (item.oldPrice) {
-      return sum + (item.product.oldPrice - item.product.price) * item.quantity
-    }
-    return sum
-  }, 0)
 
+  useEffect(() => {
+    $api.get(`${API_URL}/shopping-cart`).then((res) => {
+      setIsLoaded(true)
+      setCartItems(res.data.cartItems)
+    }).finally(() => {
+      setIsLoaded(false)
+    })
+  }, [])
+
+  useEffect(() => {
+  if (!cartItems || cartItems.length === 0) {
+    setSubtotal(0);
+    setDiscount(0);
+    return;
+  }
+
+  const calculatedSubtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+  const calculatedDiscount = cartItems.reduce((sum, item) => {
+    if (item.product.oldPrice) {
+      return (
+        sum +
+        (item.product.oldPrice - item.product.price) * item.quantity
+      );
+    }
+    return sum;
+  }, 0);
+
+  setSubtotal(calculatedSubtotal);
+  setDiscount(calculatedDiscount);
+}, [cartItems]);
+
+  if(isLoader) {
+    return (<Loader/>)
+  }
+
+    // Если корзина пуста, показываем соответствующее сообщение
+  if (!cartItems || cartItems.length < 1) {
+    return (
+      <div className="min-h-screen flex flex-col">
+
+        <Header isAuth/>
+        <main className="flex-1 container py-12">
+          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+            <div className="rounded-full bg-muted p-6 mb-6">
+              <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Ваша корзина пуста</h1>
+            <p className="text-muted-foreground mb-6">
+              Похоже, вы еще не добавили товары в корзину. Перейдите в каталог, чтобы выбрать товары.
+            </p>
+            <Button asChild className="bg-amber-700 hover:bg-amber-800">
+              <Link href="/catalog">Перейти в каталог</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+  
+
+    // Расчет итогов
   const deliveryCost = deliveryMethod === "pickup" ? 0 : deliveryMethod === "cdek" ? 300 : 500
   const promoValue = promoDiscount > 0 ? (subtotal * promoDiscount) / 100 : 0
   const total = subtotal + (deliveryMethod === 'cdek' ? selectedPoint.rate?.delivery_sum : 0) - promoValue
 
-  useEffect(() => {
-    $api.get(`${API_URL}/shopping-cart`).then((res) => {
+  const addToCart = (productId: number, count: number) => {
+    $api.get(`${API_URL}/shopping-cart/count?item=${productId}&count=${count + 1}`)
+        .then((res) => {setCartItems(res.data.cartItems)})
+  }
+
+  const removeFromCart = (productId: number, count: number) => {
+    $api.get(`${API_URL}/shopping-cart/count?item=${productId}&count=${count - 1}`)
+    .then((res) => {
       setCartItems(res.data.cartItems)
+      if(count - 1 === 0) {
+        messageApi.info(`Товар #${productId} был удален из корзины!`)
+      }
     })
-  }, [])
-
-  // Обработчики для корзины
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return
-
-    setCartItems(cartItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item)))
   }
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id))
+  const deleteFromCart = (productId: number) => {
+    $api.get(`${API_URL}/shopping-cart/count?item=${productId}&count=${0}`)
+    .then((res) => {
+      setCartItems(res.data.cartItems)
+      messageApi.info(`Товар #${productId} был удален из корзины!`)
+    })
   }
 
-  const {isAuth} = useAuth();
+
   const applyPromoCode = () => {
     // Имитация проверки промокода
     if (promoCode.toLowerCase() === "leather10") {
@@ -132,41 +201,6 @@ export default function CartPage() {
 
   }
 
-  // Эффект для инициализации карты СДЭК
-  useEffect(() => {
-    if (deliveryMethod === "cdek" && !mapLoaded) {
-      // В реальном проекте здесь была бы инициализация карты СДЭК API
-      // Для демонстрации просто устанавливаем флаг загрузки карты
-      setMapLoaded(true)
-    }
-  }, [deliveryMethod, mapLoaded])
-
-  // Если корзина пуста, показываем соответствующее сообщение
-  if (cartItems.length === 0) {
-    return (
-
-
-      <div className="min-h-screen flex flex-col">
-
-        <Header isAuth/>
-        <main className="flex-1 container py-12">
-          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
-            <div className="rounded-full bg-muted p-6 mb-6">
-              <ShoppingCart className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2">Ваша корзина пуста</h1>
-            <p className="text-muted-foreground mb-6">
-              Похоже, вы еще не добавили товары в корзину. Перейдите в каталог, чтобы выбрать товары.
-            </p>
-            <Button asChild className="bg-amber-700 hover:bg-amber-800">
-              <Link href="/catalog">Перейти в каталог</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
   return (
     <>
     <div className="min-h-screen flex flex-col">
@@ -196,8 +230,8 @@ export default function CartPage() {
                       <div key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg">
                         <div className="relative w-full sm:w-24 h-24 flex-shrink-0">
                           <Image
-                            src={`${API_URL}/uploads/${item.product.images[0].file}` || "/placeholder.svg"}
-                            alt={item.product.title}
+                            src={`${API_URL}/uploads/${item.product?.images?.[0]?.file}` || "/placeholder.svg"}
+                            alt={"fff"}
                             fill
                             className="object-cover rounded-md"
                           />
@@ -206,11 +240,13 @@ export default function CartPage() {
                           <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                             <Link href={`/product/${item.product.id}`} className="font-medium hover:text-amber-700">
                               {item.product.title}
+                              
                             </Link>
+                            
                             <div className="flex items-center gap-2">
                               <div className="flex items-center">
                                 <button
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => removeFromCart(item.product?.id, item.quantity)}
                                   disabled={item.quantity <= 1}
                                   className="h-8 w-8 border rounded-l-md flex items-center justify-center hover:bg-muted disabled:opacity-50"
                                 >
@@ -220,14 +256,17 @@ export default function CartPage() {
                                   {item.quantity}
                                 </div>
                                 <button
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                  className="h-8 w-8 border rounded-r-md flex items-center justify-center hover:bg-muted"
+                                  onClick={() => addToCart(item.product?.id, item.quantity)}
+                                  disabled={item.quantity >= item.product?.count}
+                                  className="h-8 w-8 border rounded-r-md flex items-center justify-center hover:bg-muted disabled:opacity-50"
                                 >
                                   <Plus className="h-3 w-3" />
                                 </button>
+                                
                               </div>
+                              <p className="text-sm">В наличии: {item.product?.count}</p>
                               <button
-                                onClick={() => removeItem(item.id)}
+                                onClick={() => deleteFromCart(item.product?.id)}
                                 className="h-8 w-8 border rounded-md flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -361,7 +400,6 @@ export default function CartPage() {
                               <CdekWidget setSelectPoint={setSelectedPoint}/>
                             </div>
                             {selectedPoint && (
-                              console.log(selectedPoint),
                               <div className="p-3 bg-muted/50 rounded-lg">
                                 <h4 className="font-medium mb-2">Пункт выдачи: {selectedPoint.address?.region}, {selectedPoint.address?.city}, {selectedPoint.address?.address}</h4>
                                 <p className="text-sm text-muted-foreground mb-1">

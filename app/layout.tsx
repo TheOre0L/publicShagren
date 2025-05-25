@@ -6,9 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
 export const metadata = {
-  title: "КожаМастер - Изделия из кожи ручной работы",
-  description: "Магазин кожаных изделий ручной работы: кошельки, сумки, ремни и аксессуары из натуральной кожи.",
-    generator: 'v0.dev'
+  title: "Шагрень | Изделия из кожи ручной работы",
+  description: "Магазин кожаных изделий ручной работы: кошельки, сумки, ремни и аксессуары из натуральной кожи."
 }
 
 export default function RootLayout({

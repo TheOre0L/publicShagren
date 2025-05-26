@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, User, Settings } from "lucide-react";
+import { ShoppingCart, User, Settings, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import $api, { API_URL } from "@/http/requests";
 import {
@@ -40,6 +40,7 @@ export default function Header({
   isAuthPage?: boolean;
 }) {
   const [cartItemCount, setCartItemCount] = useState<number>(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -63,8 +64,20 @@ export default function Header({
   ];
 
   const isActive = (href: string) => {
-    // Сравниваем путь только для маршрутов без #
     return href !== "#" && pathname === href;
+  };
+
+  // Закрыть мобильное меню при клике по ссылке
+  const handleNavClick = (href: string) => {
+    setMobileMenuOpen(false);
+    if (href.startsWith("#")) {
+      // Скролл к якорю
+      const id = href.slice(1);
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      router.push(href);
+    }
   };
 
   return (
@@ -72,6 +85,7 @@ export default function Header({
       <div className="container flex h-16 items-center justify-between py-4">
         {(isAuthPage || !isAdminPage) && <Logo />}
 
+        {/* Десктоп навигация */}
         {!isAuthPage && !isAdminPage && (
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map(({ href, label }) => (
@@ -88,6 +102,7 @@ export default function Header({
           </nav>
         )}
 
+        {/* Кнопки справа */}
         <div className="flex items-center gap-4">
           {isAuth ? (
             <>
@@ -143,8 +158,62 @@ export default function Header({
               </Link>
             </>
           )}
+
+          {/* Бургер-иконка для мобилки */}
+          {!isAuthPage && !isAdminPage && (
+            <button
+              className="md:hidden p-2 rounded hover:bg-gray-200"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+            >
+              {mobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Мобильное меню */}
+      {mobileMenuOpen && (
+        <nav className="md:hidden bg-background border-t border-gray-200">
+          <ul className="flex flex-col p-4 space-y-3">
+            {navLinks.map(({ href, label }) => (
+              <li key={href}>
+                <button
+                  onClick={() => handleNavClick(href)}
+                  className={`w-full text-left text-base font-medium hover:underline underline-offset-4 ${
+                    isActive(href) ? "text-amber-600 font-semibold" : ""
+                  }`}
+                >
+                  {label}
+                </button>
+              </li>
+            ))}
+
+            {/* Кнопки Войти и Зарегистрироваться */}
+            {!isAuth && (
+              <>
+                <li>
+                  <Link href="/login">
+                    <Button className="w-full bg-amber-700 hover:bg-amber-800">
+                      Войти
+                    </Button>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/registration">
+                    <Button
+                      variant="outline"
+                      className="w-full border-amber-700 hover:bg-slate-100"
+                    >
+                      Зарегистрироваться
+                    </Button>
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }

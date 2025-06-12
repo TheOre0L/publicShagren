@@ -393,6 +393,7 @@ if(!loading) {
                     {quantity}
                   </div>
                   <button
+                    disabled={quantity >= product.count}
                     onClick={increaseQuantity}
                     className="h-10 w-10 border rounded-r-md flex items-center justify-center hover:bg-muted"
                   >
@@ -407,7 +408,7 @@ if(!loading) {
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   {product.count > 0 ? "Добавить в корзину" : "Нет в наличии"}
                 </Button>
-                <Button variant="outline" size="icon" onClick={addToWishlist} className="rounded-md">
+                <Button variant="outline" size="icon" disabled onClick={addToWishlist} className="rounded-md">
                   <Heart className="h-4 w-4" />
                 </Button>
               </div>

@@ -739,517 +739,466 @@ export default function AdminDashboard() {
                   <Dialog
                     open={productModalOpen}
                     onOpenChange={setProductModalOpen}
-                    
                   >
                     <DialogTrigger asChild>
-                      <Button className="bg-amber-600" onClick={() => setSelectedProduct(null)}>
+                      <Button
+                        className="bg-amber-600"
+                        onClick={() => setSelectedProduct(null)}
+                      >
                         <Plus className="mr-2 h-4 w-4 " /> Добавить товар
                       </Button>
                     </DialogTrigger>
-                      <DialogContent className="sm:max-w-[1600px] max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>
-                            {selectedProduct
-                              ? "Редактировать товар"
-                              : "Добавить новый товар"}
-                          </DialogTitle>
-                          <DialogDescription>
-                            {selectedProduct
-                              ? "Измените информацию о товаре и нажмите Сохранить"
-                              : "Заполните информацию о новом товаре и нажмите Добавить"}
-                          </DialogDescription>
-                        </DialogHeader>
+                    <DialogContent className="sm:max-w-[1600px] max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {selectedProduct
+                            ? "Редактировать товар"
+                            : "Добавить новый товар"}
+                        </DialogTitle>
+                        <DialogDescription>
+                          {selectedProduct
+                            ? "Измените информацию о товаре и нажмите Сохранить"
+                            : "Заполните информацию о новом товаре и нажмите Добавить"}
+                        </DialogDescription>
+                      </DialogHeader>
 
-                        <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="product-image" className="text-right">
-                              Изображение
-                            </Label>
-                            <div className="col-span-3 flex items-center gap-4">
-                              <div className="relative overflow-hidden border-white rounded border">
-                                <div>
-                                  {/* Скрытый input */}
-                                  <input
-                                    id="file-upload"
-                                    type="file"
-                                    multiple
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleChangeFile}
-                                  />
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="product-image" className="text-right">
+                            Изображение
+                          </Label>
+                          <div className="col-span-3 flex items-center gap-4">
+                            <div className="relative overflow-hidden border-white rounded border">
+                              <div>
+                                {/* Скрытый input */}
+                                <input
+                                  id="file-upload"
+                                  type="file"
+                                  multiple
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleChangeFile}
+                                />
 
-                                  {/* Кнопка выбора файлов */}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={openFileDialog}
-                                  >
-                                    <Upload className="mr-2 h-4 w-4" /> Выбрать
-                                    файлы
-                                  </Button>
+                                {/* Кнопка выбора файлов */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={openFileDialog}
+                                >
+                                  <Upload className="mr-2 h-4 w-4" /> Выбрать
+                                  файлы
+                                </Button>
 
-                                  <DragDropContext onDragEnd={handleDragEnd}>
-                                    {image.length > 0 && (
-                                      <Droppable
-                                        isDropDisabled={false}
-                                        isCombineEnabled={true}
-                                        ignoreContainerClipping={false}
-                                        droppableId="thumbnails"
-                                        direction="horizontal"
-                                      >
-                                        {(provided) => (
-                                          <div
-                                            className="flex flex-wrap"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                          >
-                                            {image.map((img, index) => (
-                                              <Draggable
-                                                key={img.id}
-                                                draggableId={String(img.id)}
-                                                index={index}
-                                              >
-                                                {(provided) => (
-                                                  <div
-                                                    className="relative m-2"
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
+                                <DragDropContext onDragEnd={handleDragEnd}>
+                                  {image.length > 0 && (
+                                    <Droppable
+                                      isDropDisabled={false}
+                                      isCombineEnabled={true}
+                                      ignoreContainerClipping={false}
+                                      droppableId="thumbnails"
+                                      direction="horizontal"
+                                    >
+                                      {(provided) => (
+                                        <div
+                                          className="flex flex-wrap"
+                                          {...provided.droppableProps}
+                                          ref={provided.innerRef}
+                                        >
+                                          {image.map((img, index) => (
+                                            <Draggable
+                                              key={img.id}
+                                              draggableId={String(img.id)}
+                                              index={index}
+                                            >
+                                              {(provided) => (
+                                                <div
+                                                  className="relative m-2"
+                                                  ref={provided.innerRef}
+                                                  {...provided.draggableProps}
+                                                  {...provided.dragHandleProps}
+                                                >
+                                                  <img
+                                                    className="w-20 h-20 object-cover rounded"
+                                                    src={`${API_URL}/uploads/${img.file}`}
+                                                    alt={img.alt}
+                                                  />
+                                                  <button
+                                                    onClick={() =>
+                                                      handleDeleteImage(index)
+                                                    }
+                                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                                                   >
-                                                    <img
-                                                      className="w-20 h-20 object-cover rounded"
-                                                      src={`${API_URL}/uploads/${img.file}`}
-                                                      alt={img.alt}
-                                                    />
-                                                    <button
-                                                      onClick={() =>
-                                                        handleDeleteImage(index)
-                                                      }
-                                                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                                    >
-                                                      &times;
-                                                    </button>
-                                                  </div>
-                                                )}
-                                              </Draggable>
-                                            ))}
-                                            {provided.placeholder}
-                                          </div>
-                                        )}
-                                      </Droppable>
-                                    )}
-                                  </DragDropContext>
-                                </div>
+                                                    &times;
+                                                  </button>
+                                                </div>
+                                              )}
+                                            </Draggable>
+                                          ))}
+                                          {provided.placeholder}
+                                        </div>
+                                      )}
+                                    </Droppable>
+                                  )}
+                                </DragDropContext>
                               </div>
                             </div>
                           </div>
-                          <br></br>
-                          <div>
-                            {/* Артикул товара */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label htmlFor="product-sku" className="text-right">
-                                Артикул товара
-                              </Label>
-                              <Input
-                                id="product-sku"
-                                value={product.sku}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    sku: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                        </div>
+                        <br></br>
+                        <div>
+                          {/* Артикул товара */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label htmlFor="product-sku" className="text-right">
+                              Артикул товара
+                            </Label>
+                            <Input
+                              id="product-sku"
+                              value={product.sku}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  sku: e.target.value,
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Название */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-name"
-                                className="text-right"
-                              >
-                                Название
-                              </Label>
-                              <Input
-                                id="product-name"
-                                value={product.title}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    title: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Название */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-name"
+                              className="text-right"
+                            >
+                              Название
+                            </Label>
+                            <Input
+                              id="product-name"
+                              value={product.title}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  title: e.target.value,
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Категория */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-category"
-                                className="text-right"
-                              >
-                                Категория
-                              </Label>
-                              <Select
-                                onValueChange={(value) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    categoryid: value,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="col-span-3">
-                                  <SelectValue placeholder="Выберите категорию" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {productParam.categoryes?.map((category) => (
-                                    <SelectItem
-                                      value={`${category.id}`}
-                                      key={category.id}
-                                    >
-                                      {category.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {/* Тип */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-type"
-                                className="text-right"
-                              >
-                                Тип
-                              </Label>
-                              <Select
-                                defaultValue={product.typeid}
-                                onValueChange={(value) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    typeid: value,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="col-span-3">
-                                  <SelectValue placeholder="Выберите тип" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {productParam.types?.map((type) => (
-                                    <SelectItem
-                                      value={`${type.id}`}
-                                      key={type.id}
-                                    >
-                                      {type.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {/* Цвет */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-color"
-                                className="text-right"
-                              >
-                                Цвет
-                              </Label>
-                              <Select
-                                onValueChange={(value) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    colors: { connect: [{ id: value }] },
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="col-span-3">
-                                  <SelectValue placeholder="Выберите цвет" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {productParam.colors?.map((color) => (
-                                    <SelectItem
-                                      value={`${color.id}`}
-                                      key={color.id}
-                                    >
-                                      {color.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-{/* Категория */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-material"
-                                className="text-right"
-                              >
-                                Материал
-                              </Label>
-                              <Select
-                                value={product.materialid} // Use the current value of materialid
-                                onValueChange={(value) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    materialid: value,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="col-span-3">
-                                  <SelectValue placeholder="Выберите материал" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {productParam.materials?.map((material) => (
-                                    <SelectItem
-                                      value={`${material.id}`}
-                                      key={material.id}
-                                    >
-                                      {material.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
+                          {/* Категория */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-category"
+                              className="text-right"
+                            >
+                              Категория
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  categoryid: value,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Выберите категорию" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {productParam.categoryes?.map((category) => (
+                                  <SelectItem
+                                    value={`${category.id}`}
+                                    key={category.id}
+                                  >
+                                    {category.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {/* Тип */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-type"
+                              className="text-right"
+                            >
+                              Тип
+                            </Label>
+                            <Select
+                              defaultValue={product.typeid}
+                              onValueChange={(value) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  typeid: value,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Выберите тип" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {productParam.types?.map((type) => (
+                                  <SelectItem
+                                    value={`${type.id}`}
+                                    key={type.id}
+                                  >
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {/* Цвет */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-color"
+                              className="text-right"
+                            >
+                              Цвет
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  colors: { connect: [{ id: value }] },
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Выберите цвет" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {productParam.colors?.map((color) => (
+                                  <SelectItem
+                                    value={`${color.id}`}
+                                    key={color.id}
+                                  >
+                                    {color.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {/* Категория */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-material"
+                              className="text-right"
+                            >
+                              Материал
+                            </Label>
+                            <Select
+                              value={product.materialid} // Use the current value of materialid
+                              onValueChange={(value) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  materialid: value,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Выберите материал" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {productParam.materials?.map((material) => (
+                                  <SelectItem
+                                    value={`${material.id}`}
+                                    key={material.id}
+                                  >
+                                    {material.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                            {/* Цена */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-price"
-                                className="text-right"
-                              >
-                                Цена
-                              </Label>
-                              <Input
-                                id="product-price"
-                                min={0}
-                                value={product.price}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    price: parseFloat(e.target.value),
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Цена */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-price"
+                              className="text-right"
+                            >
+                              Цена
+                            </Label>
+                            <Input
+                              id="product-price"
+                              min={0}
+                              value={product.price}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  price: parseFloat(e.target.value),
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Количество */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-stock"
-                                className="text-right"
-                              >
-                                Количество (в наличии)
-                              </Label>
-                              <Input
-                                id="product-stock"
-                                type="number"
-                                min={0}
-                                value={product.count}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    count: parseFloat(e.target.value),
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Количество */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-stock"
+                              className="text-right"
+                            >
+                              Количество (в наличии)
+                            </Label>
+                            <Input
+                              id="product-stock"
+                              type="number"
+                              min={0}
+                              value={product.count}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  count: parseFloat(e.target.value),
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Короткое описание */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-description"
-                                className="text-right"
-                              >
-                                Короткое описание
-                              </Label>
-                              <Input
-                                id="product-description"
-                                value={product.description}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    description: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Короткое описание */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-description"
+                              className="text-right"
+                            >
+                              Короткое описание
+                            </Label>
+                            <Input
+                              id="product-description"
+                              value={product.description}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  description: e.target.value,
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Подробное описание */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-weight"
-                                className="text-right"
-                              >
-                                Полное описание 
-                              </Label>
-                              <Textarea
-                                id="product-weight"
-                                value={product.longDescription}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    longDescription: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Подробное описание */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-weight"
+                              className="text-right"
+                            >
+                              Полное описание
+                            </Label>
+                            <Textarea
+                              id="product-weight"
+                              value={product.longDescription}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  longDescription: e.target.value,
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Особенности */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-features"
-                                className="text-right"
-                              >
-                                Особенности
-                              </Label>
-                              <Input
-                                id="product-features"
-                                value={product.features}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    features: e.target.value.split(","),
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Особенности */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-features"
+                              className="text-right"
+                            >
+                              Особенности
+                            </Label>
+                            <Input
+                              id="product-features"
+                              value={product.features}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  features: e.target.value.split(","),
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Размеры */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-dimensions"
-                                className="text-right"
-                              >
-                                Размеры
-                              </Label>
-                              <Input
-                                id="product-dimensions"
-                                value={product.dimensions}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    dimensions: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Размеры */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-dimensions"
+                              className="text-right"
+                            >
+                              Размеры
+                            </Label>
+                            <Input
+                              id="product-dimensions"
+                              value={product.dimensions}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  dimensions: e.target.value,
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            {/* Вес */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label
-                                htmlFor="product-weight"
-                                className="text-right"
-                              >
-                                Вес
-                              </Label>
-                              <Input
-                                id="product-weight"
-                                value={product.weight}
-                                onChange={(e) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    weight: e.target.value,
-                                  }))
-                                }
-                                className="col-span-3"
-                              />
-                            </div>
+                          {/* Вес */}
+                          <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                            <Label
+                              htmlFor="product-weight"
+                              className="text-right"
+                            >
+                              Вес
+                            </Label>
+                            <Input
+                              id="product-weight"
+                              value={product.weight}
+                              onChange={(e) =>
+                                setProduct((prev) => ({
+                                  ...prev,
+                                  weight: e.target.value,
+                                }))
+                              }
+                              className="col-span-3"
+                            />
+                          </div>
 
-                            
-                            <div className="grid grid-cols-4 items-start gap-4 mt-4">
-                              <Label className="text-right pt-2">
-                                Похожие товары
-                              </Label>
-                              <div className="col-span-3 space-y-4">
-                                <div className="flex gap-2">
-                                  <div className="relative flex-1">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                      placeholder="Поиск товаров..."
-                                      className="pl-8"
-                                      value={searchProduct}
-                                      onChange={(e) => {
-                                        setSearchProduct(e.target.value);
-                                      }}
-                                    />
-                                  </div>
+                          <div className="grid grid-cols-4 items-start gap-4 mt-4">
+                            <Label className="text-right pt-2">
+                              Похожие товары
+                            </Label>
+                            <div className="col-span-3 space-y-4">
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                  <Input
+                                    placeholder="Поиск товаров..."
+                                    className="pl-8"
+                                    value={searchProduct}
+                                    onChange={(e) => {
+                                      setSearchProduct(e.target.value);
+                                    }}
+                                  />
                                 </div>
+                              </div>
 
-                                {/* Selected Related Products */}
-                                <div className="space-y-2">
-                                  <Label className="text-sm">
-                                    Выбранные товары (
-                                    {selectedRelatedProducts.length})
-                                  </Label>
-                                  <div className="border rounded-md p-2 min-h-[100px] max-h-[200px] overflow-y-auto">
-                                    {selectedRelatedProducts.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {products
-                                          .filter((p) =>
-                                            selectedRelatedProducts.includes(p.id)
-                                          )
-                                          .map((product) => (
-                                            <div
-                                              key={product.id}
-                                              className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded-md"
-                                            >
-                                              <div className="flex items-center gap-2">
-                                                <div className="relative h-8 w-8 overflow-hidden rounded">
-                                                  <Image
-                                                    src={
-                                                      `${API_URL}/uploads/${product?.images[0]?.file}` ||
-                                                      "/placeholder.svg"
-                                                    }
-                                                    alt={`${product?.images[0]?.alt}`}
-                                                    fill
-                                                    className="object-cover"
-                                                  />
-                                                </div>
-                                                <span className="text-sm font-medium">
-                                                  {product.title}
-                                                </span>
-                                              </div>
-
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-7 w-7"
-                                                onClick={() =>
-                                                  removeRelatedProduct(product.id)
-                                                }
-                                              >
-                                                <X className="h-4 w-4" />
-                                              </Button>
-                                            </div>
-                                          ))}
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                                        Нет выбранных товаров
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Search Results */}
-                                <div className="space-y-2">
-                                  <Label className="text-sm">
-                                    Результаты поиска
-                                  </Label>
-                                  <div className="border rounded-md p-2 min-h-[150px] max-h-[250px] overflow-y-auto">
-                                    {findProduct.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {findProduct.map((product) => (
+                              {/* Selected Related Products */}
+                              <div className="space-y-2">
+                                <Label className="text-sm">
+                                  Выбранные товары (
+                                  {selectedRelatedProducts.length})
+                                </Label>
+                                <div className="border rounded-md p-2 min-h-[100px] max-h-[200px] overflow-y-auto">
+                                  {selectedRelatedProducts.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {products
+                                        .filter((p) =>
+                                          selectedRelatedProducts.includes(p.id)
+                                        )
+                                        .map((product) => (
                                           <div
-                                            key={product?.id}
-                                            className="flex items-center justify-between gap-2 p-2 hover:bg-muted/50 rounded-md"
+                                            key={product.id}
+                                            className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded-md"
                                           >
                                             <div className="flex items-center gap-2">
                                               <div className="relative h-8 w-8 overflow-hidden rounded">
@@ -1263,154 +1212,209 @@ export default function AdminDashboard() {
                                                   className="object-cover"
                                                 />
                                               </div>
-                                              <div className="flex flex-col">
-                                                <span className="text-sm font-medium">
-                                                  {product?.title}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                  {product?.type?.name} •{" "}
-                                                  {product?.category?.title}
-                                                </span>
-                                              </div>
+                                              <span className="text-sm font-medium">
+                                                {product.title}
+                                              </span>
                                             </div>
+
                                             <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7"
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-7 w-7"
                                               onClick={() =>
-                                                addRelatedProduct(product?.id)
+                                                removeRelatedProduct(product.id)
                                               }
-                                              disabled={selectedRelatedProducts.includes(
-                                                product?.id
-                                              )}
                                             >
-                                              {selectedRelatedProducts.includes(
-                                                product?.id
-                                              ) ? (
-                                                <>
-                                                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                                                  Добавлен
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Plus className="h-3.5 w-3.5 mr-1" />
-                                                  Добавить
-                                                </>
-                                              )}
+                                              <X className="h-4 w-4" />
                                             </Button>
                                           </div>
                                         ))}
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                                        {searchProduct
-                                          ? "Ничего не найдено"
-                                          : "Начните поиск товаров"}
-                                      </div>
-                                    )}
-                                  </div>
-                                  {/* Переключатели */}
-                            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                              <Label htmlFor="product-new" className="text-right">
-                                Новый товар
-                              </Label>
-                              <Switch
-                                id="product-new"
-                                checked={product.isNew}
-                                onCheckedChange={(value) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    isNew: value,
-                                  }))
-                                }
-                              />
-                              <Label
-                                htmlFor="product-bestseller"
-                                className="text-right"
-                              >
-                                Хит продаж
-                              </Label>
-                              <Switch
-                                id="product-bestseller"
-                                checked={product.isBestseller}
-                                onCheckedChange={(value) =>
-                                  setProduct((prev) => ({
-                                    ...prev,
-                                    isBestseller: value,
-                                  }))
-                                }
-                              />
-                            </div>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                                      Нет выбранных товаров
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Search Results */}
+                              <div className="space-y-2">
+                                <Label className="text-sm">
+                                  Результаты поиска
+                                </Label>
+                                <div className="border rounded-md p-2 min-h-[150px] max-h-[250px] overflow-y-auto">
+                                  {findProduct.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {findProduct.map((product) => (
+                                        <div
+                                          key={product?.id}
+                                          className="flex items-center justify-between gap-2 p-2 hover:bg-muted/50 rounded-md"
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <div className="relative h-8 w-8 overflow-hidden rounded">
+                                              <Image
+                                                src={
+                                                  `${API_URL}/uploads/${product?.images[0]?.file}` ||
+                                                  "/placeholder.svg"
+                                                }
+                                                alt={`${product?.images[0]?.alt}`}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            </div>
+                                            <div className="flex flex-col">
+                                              <span className="text-sm font-medium">
+                                                {product?.title}
+                                              </span>
+                                              <span className="text-xs text-muted-foreground">
+                                                {product?.type?.name} •{" "}
+                                                {product?.category?.title}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7"
+                                            onClick={() =>
+                                              addRelatedProduct(product?.id)
+                                            }
+                                            disabled={selectedRelatedProducts.includes(
+                                              product?.id
+                                            )}
+                                          >
+                                            {selectedRelatedProducts.includes(
+                                              product?.id
+                                            ) ? (
+                                              <>
+                                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                                Добавлен
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Plus className="h-3.5 w-3.5 mr-1" />
+                                                Добавить
+                                              </>
+                                            )}
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                                      {searchProduct
+                                        ? "Ничего не найдено"
+                                        : "Начните поиск товаров"}
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Переключатели */}
+                                <div className="grid grid-cols-4 items-center gap-4 mt-2">
+                                  <Label
+                                    htmlFor="product-new"
+                                    className="text-right"
+                                  >
+                                    Новый товар
+                                  </Label>
+                                  <Switch
+                                    id="product-new"
+                                    checked={product.isNew}
+                                    onCheckedChange={(value) =>
+                                      setProduct((prev) => ({
+                                        ...prev,
+                                        isNew: value,
+                                      }))
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor="product-bestseller"
+                                    className="text-right"
+                                  >
+                                    Хит продаж
+                                  </Label>
+                                  <Switch
+                                    id="product-bestseller"
+                                    checked={product.isBestseller}
+                                    onCheckedChange={(value) =>
+                                      setProduct((prev) => ({
+                                        ...prev,
+                                        isBestseller: value,
+                                      }))
+                                    }
+                                  />
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <DialogFooter>
-                          <Button
-                            variant="outline"
-                            onClick={() => setProductModalOpen(false)}
-                          >
-                            Отмена
-                          </Button>
-                          <Button className="bg-amber-600"
-                            onClick={() => {
-                              if (!selectedProduct) {
-                                $api
-                                  .post(`${API_URL}/products`, product)
-                                  .then((res) => {
-                                    messageApi.success(
-                                      `${res.data.alert.message}`
-                                    );
-                                    setProductModalOpen(false);
-                                  })
-                                  .catch((err) => {
-                                    messageApi.error(`${err}`);
-                                  });
-                              }
-                              if (selectedProduct) {
-                                $api
-                                  .patch(
-                                    `${API_URL}/products?productId=${selectedProduct?.id}`,
-                                    {
-                                      longDescription: product.longDescription,
-                                      title: product.title,
-                                      price: product.price,
-                                      description: product.description,
-                                      images: product.images,
-                                      thumbnails: product.images,
-                                      materialid: product.materialid,
-                                      categoryid: product.categoryid,
-                                      typeid: product.typeid,
-                                      count: product.count,
-                                      isNew: product.isNew,
-                                      isBestseller: product.isBestseller,
-                                      sku: product.sku,
-                                      features: product.features,
-                                      dimensions: product.dimensions,
-                                      weight: product.weight,
-                                      colors: {
-                                        connect: [{ id: product.colors[0].id }],
-                                      },
-                                      relatedProducts: product.relatedProducts,
-                                    }
-                                  )
-                                  .then((res) => {
-                                    messageApi.success(
-                                      `Продукт успешно обновлен`
-                                    );
-                                    setProductModalOpen(false);
-                                  })
-                                  .catch((err) => {
-                                    messageApi.error(`${err}`);
-                                  });
-                              }
-                            }}
-                          >
-                            {selectedProduct ? "Сохранить" : "Добавить"}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setProductModalOpen(false)}
+                        >
+                          Отмена
+                        </Button>
+                        <Button
+                          className="bg-amber-600"
+                          onClick={() => {
+                            if (!selectedProduct) {
+                              $api
+                                .post(`${API_URL}/products`, product)
+                                .then((res) => {
+                                  messageApi.success(
+                                    `${res.data.alert.message}`
+                                  );
+                                  setProductModalOpen(false);
+                                })
+                                .catch((err) => {
+                                  messageApi.error(`${err}`);
+                                });
+                            }
+                            if (selectedProduct) {
+                              $api
+                                .patch(
+                                  `${API_URL}/products?productId=${selectedProduct?.id}`,
+                                  {
+                                    longDescription: product.longDescription,
+                                    title: product.title,
+                                    price: product.price,
+                                    description: product.description,
+                                    images: product.images,
+                                    thumbnails: product.images,
+                                    materialid: product.materialid,
+                                    categoryid: product.categoryid,
+                                    typeid: product.typeid,
+                                    count: product.count,
+                                    isNew: product.isNew,
+                                    isBestseller: product.isBestseller,
+                                    sku: product.sku,
+                                    features: product.features,
+                                    dimensions: product.dimensions,
+                                    weight: product.weight,
+                                    colors: {
+                                      connect: [{ id: product.colors[0].id }],
+                                    },
+                                    relatedProducts: product.relatedProducts,
+                                  }
+                                )
+                                .then((res) => {
+                                  messageApi.success(
+                                    `Продукт успешно обновлен`
+                                  );
+                                  setProductModalOpen(false);
+                                })
+                                .catch((err) => {
+                                  messageApi.error(`${err}`);
+                                });
+                            }
+                          }}
+                        >
+                          {selectedProduct ? "Сохранить" : "Добавить"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
                   </Dialog>
                 </div>
 
@@ -1528,7 +1532,7 @@ export default function AdminDashboard() {
                               >
                                 <DialogTrigger asChild>
                                   <Button
-                                  className="bg-amber-600"  
+                                    className="bg-amber-600"
                                     onClick={() => {
                                       setEditItemId(null);
                                       setNewCategoryName("");
@@ -1578,7 +1582,7 @@ export default function AdminDashboard() {
                                       Отмена
                                     </Button>
                                     <Button
-                                    className="bg-amber-600"
+                                      className="bg-amber-600"
                                       onClick={() => {
                                         if (!editItemId) {
                                           $api
@@ -1635,7 +1639,6 @@ export default function AdminDashboard() {
                                       <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                           <Button
-                                          
                                             variant="outline"
                                             size="icon"
                                             onClick={() => {
@@ -1700,7 +1703,7 @@ export default function AdminDashboard() {
                               >
                                 <DialogTrigger asChild>
                                   <Button
-                                  className="bg-amber-600"
+                                    className="bg-amber-600"
                                     onClick={() => {
                                       setEditItemId(null);
                                       setNewTypeName("");
@@ -1751,7 +1754,7 @@ export default function AdminDashboard() {
                                       Отмена
                                     </Button>
                                     <Button
-                                    className="bg-amber-600"
+                                      className="bg-amber-600"
                                       onClick={() => {
                                         if (!editItemId) {
                                           $api
@@ -1870,7 +1873,7 @@ export default function AdminDashboard() {
                               >
                                 <DialogTrigger asChild>
                                   <Button
-                                  className="bg-amber-600"
+                                    className="bg-amber-600"
                                     onClick={() => {
                                       setEditItemId(null);
                                       setNewTypeName("");
@@ -2063,7 +2066,7 @@ export default function AdminDashboard() {
                               >
                                 <DialogTrigger asChild>
                                   <Button
-                                  className="bg-amber-600"
+                                    className="bg-amber-600"
                                     onClick={() => {
                                       setEditItemId(null);
                                       setNewMaterialName("");
@@ -2113,7 +2116,7 @@ export default function AdminDashboard() {
                                       Отмена
                                     </Button>
                                     <Button
-                                    className="bg-amber-600"
+                                      className="bg-amber-600"
                                       onClick={() => {
                                         if (!editItemId) {
                                           $api
@@ -2269,9 +2272,11 @@ export default function AdminDashboard() {
                         Подробности заказа
                       </TableHead>
                       <TableHead>Подробности оплаты</TableHead>
+
                       <TableHead className="text-right">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
                     {filteredOrders.map((order) => (
                       <TableRow key={order.id}>
@@ -2358,60 +2363,69 @@ export default function AdminDashboard() {
                           </h6>{" "}
                           <br />
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Label
-                              htmlFor="product-category"
-                              className="text-right"
-                            >
-                              Статус заказа
-                            </Label>
-                            <Select
-                              // defaultValue={}
-                              onValueChange={(value) => {
-                                if(value === "cancelled") {
-                                  $api.delete(`${API_URL}/orders?orderId=${order.id}`).then().catch()
-                                }
-                                if (order.status === "cancelled")
-                                  return messageApi.error(
-                                    `Заказ #${order.id} отменен, взять его в работу невозможно!`
-                                  );
-                                $api
-                                  .patch(
-                                    `${API_URL}/orders?orderId=${order.id}&status=${value}`
-                                  )
-                                  .then((res) => {
-                                    setOrders(res.data);
-                                    messageApi.success(
-                                      `Статус заказа #${order.id} установлен как - ${value}`
-                                    );
-                                  });
-                                // setSelectedStatusOrder(value)
-                              }}
-                            >
-                              <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Выберите статус" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">
-                                  В обработке
-                                </SelectItem>
-                                <SelectItem value="succeeded">
-                                  Принять в работу
-                                </SelectItem>
-                                <SelectItem value="shipped">
-                                  Отправлен
-                                </SelectItem>
-                                <SelectItem value="delivered">
-                                  Доставлен
-                                </SelectItem>
-                                <SelectItem value="cancelled">
-                                  Отменен
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </TableCell>
+                        {order.status != "cancelled" && (
+                          <>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Label
+                                  htmlFor="product-category"
+                                  className="text-right"
+                                >
+                                  Статус заказа
+                                </Label>
+                                <Select
+                                  // defaultValue={}
+                                  onValueChange={(value) => {
+                                    if (value === "cancelled") {
+                                      $api
+                                        .delete(
+                                          `${API_URL}/orders?orderId=${order.id}`
+                                        )
+                                        .then()
+                                        .catch();
+                                    }
+                                    if (order.status === "cancelled")
+                                      return messageApi.error(
+                                        `Заказ #${order.id} отменен, взять его в работу невозможно!`
+                                      );
+                                    $api
+                                      .patch(
+                                        `${API_URL}/orders?orderId=${order.id}&status=${value}`
+                                      )
+                                      .then((res) => {
+                                        setOrders(res.data);
+                                        messageApi.success(
+                                          `Статус заказа #${order.id} установлен как - ${value}`
+                                        );
+                                      });
+                                    // setSelectedStatusOrder(value)
+                                  }}
+                                >
+                                  <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Выберите статус" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pending">
+                                      В обработке
+                                    </SelectItem>
+                                    <SelectItem value="succeeded">
+                                      Принять в работу
+                                    </SelectItem>
+                                    <SelectItem value="shipped">
+                                      Отправлен
+                                    </SelectItem>
+                                    <SelectItem value="delivered">
+                                      Доставлен
+                                    </SelectItem>
+                                    <SelectItem value="cancelled">
+                                      Отменен
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
